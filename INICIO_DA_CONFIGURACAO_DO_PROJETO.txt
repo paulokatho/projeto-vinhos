@@ -100,8 +100,68 @@ Passo 4 fazer o cadastro do vinho
 			- Onde o # diz ao thymeleaf que ele precisa buscar e substituir o valor o tipoVinho pelo valor que foi declarado dentro do messages.properties.
 				- Se o tipoVinho ROSE = Rosé com acento, pode ser que fique desconfigurado no browser, pois o padrão pode não ser o UTF-8. Para alterar isso é necessário clicar com o botão 
 					direito em messages.properties e alterar para UTF-8.
+		- Se não funcionar o utf-8 mais para frente faremos algo a mais para setar certinho.
+	- Tentar salvar um vinho e verificar no banco h2 se salvou corretamente e se a mascara jquery.masknumber está funcionando certo. Essa mácara feita pelo Normander já é responsiva para 
+		aparelhos mobile.
+		
+	- Vamos agora acrescentar algumas validações e acrescentar as mensagens na tela de sucesso ou que está faltando algum campo para ser preenchido corretamente.
+		- Na classe vinho acrescentar as anotações (@NotBlank e @NotNull).
+			@Id
+			@GeneratedValue(strategy = GenerationType.IDENTITY)
+			private Long codigo;
 			
+			@NotBlank // não aceita nenhum espaço em branco
+			private String nome;
+			
+			@NotNull
+			@Enumerated(EnumType.STRING)
+			private TipoVinho tipo;
+			
+			@NotNull
+			@NumberFormat(pattern = "#,##0.00")
+			private BigDecimal valor;
+				
+		- Alterar a classe Vinhos controller para receber ModelAndView e manter as informações na tela quando alguma validação não estiver em conformidade.
+			@Controller
+			public class VinhosController {
+			
+				@Autowired
+				private Vinhos vinhos;
+				
+				@GetMapping("/vinhos/novo")
+				public ModelAndView novo(Vinho vinho) {
+					ModelAndView mv = new ModelAndView("vinho/cadastro-vinho");
+					mv.addObject("tipos", TipoVinho.values());
+					return mv;
+				}
+				
+				@PostMapping("/vinhos/novo")
+				public ModelAndView salvar(@Valid Vinho vinho, BindingResult result) {
+					if (result.hasErrors()) {
+						 return novo(vinho);
+					}
+					
+					vinhos.save(vinho);
+					return new ModelAndView("redirect:/vinhos/novo");
+				}
+			}
+			
+			- No thymeleaf agora colocar as mensagens de erro.
+			
+				- A div que está comentada que contem a class = "alert" passar ela para dentro do <form method = "POST"....>, pois quem será validado, ou que contém erro 
+					 é o objeto que está dentro do th:object. Ou seja o thymeleaf vai perguntado se existe algum erro dentro do formulario.
+					-  Para que funcione corretamente estaremos usando um objeto do tipo "helper" do thymeleaf que pergunta sempre se existe erro para esse formulario.
+						- Dentro do div class= "alert" vamos inserir esse helper para que seja exibida a mensagem de erro somente SE existir erro na tela ou validação.
+							th:if="${#fields.hasAnyErros()}". 
+								Esse "fields" é o helper do thymeleaf. e .hasAnyErrors está perguntando se existe algum erro no formulario que contem o objeto aí ele renderiza
+									o <div> que contém o alert e deixa uma faixinha vermelha na tela.
+									
+						
+			
+		
+		
 		PAREI EM 1:05:25
+		Parei em 1:19 - Dia 20/02/17
 				
 		
 		
