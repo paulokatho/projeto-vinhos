@@ -146,7 +146,7 @@ Passo 4 fazer o cadastro do vinho
 				}
 			}
 			
-			- No thymeleaf agora colocar as mensagens de erro.
+			- No thymeleaf agora colocar as mensagens de erro e testar os codigos abaixo.
 			
 				- A div que está comentada que contem a class = "alert" passar ela para dentro do <form method = "POST"....>, pois quem será validado, ou que contém erro 
 					 é o objeto que está dentro do th:object. Ou seja o thymeleaf vai perguntado se existe algum erro dentro do formulario.
@@ -155,10 +155,49 @@ Passo 4 fazer o cadastro do vinho
 							th:if="${#fields.hasAnyErros()}". 
 								Esse "fields" é o helper do thymeleaf. e .hasAnyErrors está perguntando se existe algum erro no formulario que contem o objeto aí ele renderiza
 									o <div> que contém o alert e deixa uma faixinha vermelha na tela.
-									
+					
+					- Criando o bloco para exibir os erros para cada campo, ou seja, para cada validação que existe na nossa classe Vinho.
 						
-			
+						<!-- o block é para montar um bloco para fazer um laço, como por exemplo o th:each para exibir todos os erros de validação que podem ser disparados
+								então aqui (detailedErrors()) diz: pegue todos os erros que contém no formulario, ou #fields e entregue para a variavel "error".
+								Dessa forma a mensagem será exibida em blocos, ou seja uma exclamation e um error.message para cada validação disparada -->
+						
+						<th:block th:each="error : ${#fields.detailedErrors()}">
+							<div> <!-- Essa div server para colocar uma mensagem embaixo da outra, se não ela é exibida uma do lado da outra. -->
+								<i class="fa  fa-exclamation-circle"></i>
+								<span th:text="${error.message}"></span>
+							</div>
+						</th:block>
+						
+	- Agora criar dentro da pasta <templates> um novo File chamado "ValidationMessages.properties".
+	
+		- Esse arquivo vai servir para deixar as mensagens que serão disparadas um pouco mais agradaveis para o usuário.
 		
+			*** Se não funcionar os caracteres especiais, utilizar o unicode para gerar os caracteres especiais, por exemplo "é = 00E9".
+			*** Um dos links para procurar os caracteres unicode é: www.utf8-chartable.de 
+		
+		- Para esse validationMessages.properties é necessario pegar a chave da validação e para isso basta ir até a validação @NotNull ou @NotBlank e entrar nelas e pegar
+			as chaves assim:
+			
+				javax.validation.constraints.NotNull.message = {0} \u00e9 obrigat\u00f3rio
+				org.hibernate.validator.constraints.NotBlank.message = {0} \u00e9 obrigat\u00f3rio 
+		
+		- Os atributos do objeto que são exibidos na faixa de erro estão com a letra minuscula e para deixar maiúscula é só ir em:
+			messages.properties e acrescentar:
+			
+				vinho.tipo = Tipo
+				vinho.nome = Nome
+				vinho.valor = Valor
+		
+		- Dessa forma já vai aparecer tudo em maiúsculo na faixa de validação que aparece em vermelho caso alguma restrição não seja satisfeita.
+		
+		
+*** Revendo o que foi feito até agora na primeira aula, ou aula 2 (video 2) que está na pasta de estudo de spring 2 ***
+
+	- Cadastramos o layout
+	- Fizemos cadastro no banco de dados funcionar
+	- Validação
+
 		
 		PAREI EM 1:05:25
 		Parei em 1:19 - Dia 20/02/17
