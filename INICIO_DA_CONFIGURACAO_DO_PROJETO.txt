@@ -197,6 +197,7 @@ Passo 4 fazer o cadastro do vinho
 	- Cadastramos o layout
 	- Fizemos cadastro no banco de dados funcionar
 	- Validação
+	
 
 		
 		PAREI EM 1:05:25

@@ -1,0 +1,93 @@
+Nome do vídeo: Oficina2_Spring_Algaworks_Vídeo3_Segurança_e_Deploy
+
+Veremos:
+	- Pesquisa de vinhos
+	- Edição e Exclusão
+	- Adicionar Segurança
+	- Deploy na nuvem
+	
+- Colocando mensagem de sucesso.
+
+	- Para começar é necessário acrescentar no html cadastro-vinho uma mensagem de sucesso, na verdade uma <div>.
+	- Porém no controle ele faz um redirect assim que grava no banco, então é necessário acrescentar um recurso para que não se perca essa mensagem.
+		- Esse recurso é o "redirectAttributes".
+		- Ele deve ser inserido após a chamada do save para ter certeza que salvou no banco.
+		
+		- Após isso voltar no cadastro-vinho.html e verificar na div se existe alguma coisa nessa mensagem para ser exibida no browser.
+			- Utilizando o objeto isEmpty do thymeleaf é possível fazer essa verificação e depois no <span> acrescentamos o th:text para exibir esse nosso
+				redirectAttribute, ou seja, o conteúdo da mensagem.
+				
+			// *** no html
+			<div class="alert  alert-success" th:if="${!#strings.isEmpty(mensagem)}">//se existir algo que não seja o isEmpty ele exibe a mensagem, "!#strings..."
+				<span th:text="${mensagem}"></span> //exibindo o conteúdo da mensagem
+			</div>
+			
+			// *** no controller
+			@PostMapping("/vinhos/novo")
+			public ModelAndView salvar(@Valid Vinho vinho, BindingResult result,
+										RedirectAttributes attributes) { //declarando o RedirectAttibutes no cabeçalho
+				if (result.hasErrors()) {
+					 return novo(vinho);
+				}		
+				vinhos.save(vinho);
+				attributes.addFlashAttribute("mensagem", "Vinho salvo com sucesso!");//preenchendo o attributes com a mensagem de sucesso
+				
+				return new ModelAndView("redirect:/vinhos/novo");
+			}
+			
+			Esse redirectAttributes cria uma mini sessão para fazer esse trabalho para não perder a mensagem ao fazer o redirect.
+				- Depois de salvar no banco e mostrar a mensagem o spring exibe na url um "jsessionid".
+					- http://localhost:8080/vinhos/novo;jsessionid=3EBCC3C701A454034FF27C9B493DBD3D
+					
+
+- Partindo para a tela de pesquisa de vinhos. 
+
+	- Nesse momento será possível ver que existe uma duplicidade de códigos e isso não é legal. Nesse momento será visto uma maneira de trabalhar melhor com o 
+		layout e utilizar melhor os recursos do thymeleaf e deixar a aplicação mais enxuta.
+		
+	- Ir até a pasta vinho dentro de resources>template e criar uma nova página do tipo html.file prestando atenção para setar ela como html-5. Nome: pesquisa-vinhos.html
+		- Colar a página de cadastro-vinho na página de pesquisa para utilizarmos o mesmo layout. 			
+	- Para reutilizarmos código e deixarmos melhor nossa página vamos utilizar o layout-dialect que cria um layout reutilizavel.
+	
+	- Retirar da página de pesquisa e cadastro a div que informa que o sistema está "Carregando..."
+	- O form terá a pesquisa implementada via GET.
+	- Apagar os outros atributos da página, deixar somente a pesquisa por nome.
+		- Também será utilizado o tipo de input com "div class= input-group" e "span class=input-group-btn" e acrescentar outro "span class= glyphicon-search".
+		- Toda essa configuração tem no site do bootstrap como implementar esse tipo de pesquisa com botãozinho de pesquisa e placeholder, etc...
+		
+		
+		<form method="GET" class="form-vertical>
+			<div class="form-group">
+				<div class="input-group">
+					<input id="nome" type="text" class="form-control" placeholder="Pesquise pelo nome"/>
+					<span class="input-group-btn">
+						<button class="btn btn-default" type="submit">
+							<span class="glyphicon  glyphicon-search"></span>
+						</button>
+					</span>
+				</div>
+			</div>
+		</form>
+			
+	- Agora ir no VinhosController e acrescentar o método pesquisar().
+	- Lembrando que para essa pesquisa, mais simples vamos utilizar os recursos do spring data jpa que já vem com vários metodos de pesquisa implementados e que somente
+		precisamos fazer a chamada deles e utilizar. Relembrando eles estão sendo chamados no repository (interface).
+	- Implementar o vinhos.findAll() para ver se está trazendo todos os registros corretamente.
+	
+		@GetMapping("/vinhos") // quando digitar essa url ele cai nesse método
+		public ModelAndView pesquisar() {
+			ModelAndView mv = new ModelAndView("/vinhos/pesquisa-vinhos");
+			mv.addObject("vinhos", vinhos.findAll());
+			return mv;
+		}
+	
+	- Se observarmos ja existe muitos codigos duplicados com o "/vinhos". Já podemos melhorar isso.
+	- Para isso vamos adicionar o @RequestMapping("/vinhos") em cima da assinatura da nossa classe VinhosController, e com isso todos os métodos que utilizarem a chamada
+		a url que contenha "/vinhos" já virá por default.
+		- Sendo assim não é mais necessário utilizar nos métodos a chamada a url contendo "/vinhos", pois agora todos já vem por default. Retirar dos métodos e no 
+			método GET da pesquisa deixa sem nada.
+			
+		
+	
+	
+	
