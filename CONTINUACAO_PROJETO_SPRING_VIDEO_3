@@ -74,9 +74,10 @@ Veremos:
 		precisamos fazer a chamada deles e utilizar. Relembrando eles estão sendo chamados no repository (interface).
 	- Implementar o vinhos.findAll() para ver se está trazendo todos os registros corretamente.
 	
+		// Esse GetMapping tem que mudar para @GetMapping, pois agora a url "/vinhos" está sendo mapeada no cabeçalho da classe controller
 		@GetMapping("/vinhos") // quando digitar essa url ele cai nesse método
 		public ModelAndView pesquisar() {
-			ModelAndView mv = new ModelAndView("/vinhos/pesquisa-vinhos");
+			ModelAndView mv = new ModelAndView("/vinho/pesquisa-vinhos"); //este caminho está dentro da pasta vinho arquivo "pesquisa-vinhos".
 			mv.addObject("vinhos", vinhos.findAll());
 			return mv;
 		}
@@ -87,7 +88,18 @@ Veremos:
 		- Sendo assim não é mais necessário utilizar nos métodos a chamada a url contendo "/vinhos", pois agora todos já vem por default. Retirar dos métodos e no 
 			método GET da pesquisa deixa sem nada.
 			
-		
+				@Controller
+				@RequestMapping("/vinhos")
+				public class VinhosController { }
+			
+		- Até aqui então criamos a tela de pesquisa e implementamos a VinhosController para receber a chamada ao métode de pesquisa e melhoramos a reutilização
+			de codigos acrescentando o @RequestMapping no cabeçalho da classe controller e também criamos a consulta .findAll() para trazer todos os nomes
+			de vinhos cadastrados usando spring data jpa.
+			
+- Agora vamos desenvolver a parte no html 5 para exibir o resultado da pesquisa.
 	
+	- Precisamos receber um filtro no controller para receber esse nome do vinho e realizar a pesquisa e o metodo pesquisar no controller receber esse filtro "nome".
+	- No package repository criar uma classe java dentro do pacote <repository> filter> com nome "VinhoFilter".
+	- Os atributos que vamos criar nesse caso é somente pelo nome, então vamos criar o atributo nome do tipo String e gerando o getter e setter.
 	
 	
