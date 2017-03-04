@@ -1,5 +1,7 @@
 package com.katho.vinhos.controller;
 
+import java.util.Optional;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.katho.vinhos.model.TipoVinho;
 import com.katho.vinhos.model.Vinho;
 import com.katho.vinhos.repository.Vinhos;
+import com.katho.vinhos.repository.filter.VinhoFilter;
 
 @Controller
 @RequestMapping("/vinhos")
@@ -41,10 +44,11 @@ public class VinhosController {
 		return new ModelAndView("redirect:/vinhos/novo");
 	}
 	
-	@GetMapping // quando digitar essa url ele cai nesse método
-	public ModelAndView pesquisar() {
-		ModelAndView mv = new ModelAndView("/vinhos/pesquisa-vinhos");
-		mv.addObject("vinhos", vinhos.findAll());
+	@GetMapping // quando digitar essa url (localhos:8080/vinhos) ele cai nesse método
+	public ModelAndView pesquisar(VinhoFilter vinhoFilter) {
+		ModelAndView mv = new ModelAndView("vinho/pesquisa-vinhos");
+		mv.addObject("vinhos", vinhos.findByNomeContainingIgnoreCase(
+						Optional.ofNullable(vinhoFilter.getNome()).orElse("%"))); //Optional a partir do java 8, pode receber nulo e passa % e pesquisa todos os vinhos ou o nome
 		return mv;
 	}
 	

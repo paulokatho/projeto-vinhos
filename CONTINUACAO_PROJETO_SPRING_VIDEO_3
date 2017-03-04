@@ -101,5 +101,150 @@ Veremos:
 	- Precisamos receber um filtro no controller para receber esse nome do vinho e realizar a pesquisa e o metodo pesquisar no controller receber esse filtro "nome".
 	- No package repository criar uma classe java dentro do pacote <repository> filter> com nome "VinhoFilter".
 	- Os atributos que vamos criar nesse caso é somente pelo nome, então vamos criar o atributo nome do tipo String e gerando o getter e setter.
+		- Esse filtro nome no package filter será amarrado na view thymeleaf de pesquisa, assim como na tela de cadastro os fieldes estão amarrados com o th:object.
+			- Então no <form> da pesquisa-vinhos acrescentar o th:obejct="${vinhoFilter}", para deixar disponível para o formulário os objetos do vinhoFilter.
+			- E no input acrescenta o th:field="*{nome}" para amarrar um campo a um atributo do objeto.
+				- Assim quando for submeter a pesquisa vai deixar disponível esse objeto e os valores dele.
+		
+		- Então para pegar os valores desse objeto vamos até o VinhosController e acrescentamos ele no método de pesquisa como parametro. Dessa forma o spring
+			já vai saber que está criando um objeto do tipo VinhoFilter e o spring entende isso. Além de que se o objeto já estiver vindo setado com algum
+			valor no field do formulario html o spring já cria o objeto do tipo VinhoFilter e seta o valor do atributo do tipo nome.
+			
+		- Agora para criar a pesquisa passando o filtro nome é só ir até a interface Vinhos em repository e vamos criar uma pesquisa personalizada 
+			com esse filtro nome.
+			Lembrando, que todo método de uma interface é public. Sempre. Então em uma interface não é necessario colocar public na frente 
+				de um método, como está feito abaixo, mas não tem importancia colocar.
+			
+		- Criar um List do pacote java util, vejamos como o spring data jpa é incrível.
+		
+			public List<Vinho> findByNomeContainingIgnoreCase(String nome);
+			
+			- Então essa pesquisa vai pesquisar por nome (findBy), containing (contendo qualquer letra, então ele coloca um % %, no fim e no começo do que 
+				foi digitado no formulário) e o IgnoreCase (não importa se é maiusculo ou minusculo).
+				
+			- Ou poderia ficar.
+			
+				public List<Vinho> findByNomeAndTipoVinhoContainingIgnoreCase(String nome, TipoVinho tipo);
+				
+				- Lembrando que tem que ir passando os parametros, mas quando fica meio grande já começa ficar feio...rsss.
+				
+		- Voltando agora no VinhosController acrescentar no nosso método mv.addObject(.....) a nossa pesquisa para deixar disponivel essa nossa lista de vinhos.
+		
+			mv.addObject("vinhos", vinhos.findByNomeContainingIgnoreCase(
+							Optional.ofNullable(vinhoFilter.getNome()).orElse("%")));
+			
+			- Optional começou no java 8, pois a página quando é carregada pode vir com o valor nulo, então caso venha com nulo ele passa % e traz todos os vinhos.
+				Poderia ter feito um comparador ternario ou outra forma, mas assim fica bem legal.
+				
+			- Agora para ver se está funcionando é só ir na tela de pesquisa-vinhos no browser e digitar algum nome ou letra e verificar se ele
+				está sendo exibido na url, se estiver funcionando tudo bonitinho será exibido na url, após o link principal.
 	
+
+- Criando a tabela para exibir o resultado da pesquisa.
+
+	- Olhar em getbootstrap.com/css/#tables e escolher uma tabela para implementarmos na pesquisa-vinhos. Essa é uma table-responsive.
+	- Colar o código logo abaixo do </form>. 
 	
+		<div class="table-responsive">
+			<table id="tabela-produtos" class="table  table-striped  table-bordered  table-hover  table-condensed  js-sticky-table">
+				<thead class="aw-table-header-solid">
+					<tr>
+						<th class="av-table-vinhos-col-codigo">Código</th>
+						<th>Nome</th>
+						<th class="av-table-vinhos-col-tipo">Tipo</th>
+						<th class="av-table-vinhos-col-valor">Valor</th>
+						<th class="av-table-vinhos-col-icons" sec:authorize="hasRole('ROLE_CADASTRAR_VINHO')"></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="vinho : ${vinhos}">
+						<td th:text="${vinho.codigo}" class="text-center">1</td>
+						<td>
+							<a th:href="@{/vinhos/{codigo}(codigo=${vinho.codigo})}" th:text="${vinho.nome}" sec:authorize="hasRole('ROLE_CADASTRAR_VINHO')"></a>
+							<span th:text="${vinho.nome}" sec:authorize="not hasRole('ROLE_CADASTRAR_VINHO')"></span>
+						</td>
+						<td th:text="#{|tipoVinho.${vinho.tipo}|}">Tinto</td>
+						<td th:text="|R$${{vinho.valor}}|" class="text-right">55,00</td>
+						<td class="text-center" sec:authorize="hasRole('ROLE_CADASTRAR_VINHO')">
+							<i class="fa  fa-trash" style="cursor:pointer"
+								data-toggle="modal" data-target="#confirmaExclusaoModal"
+								data:nome="${vinho.nome}" 
+								data:url-apagar="@{/vinhos/{codigo}(codigo=${vinho.codigo})}"></i>
+						</td>
+					</tr>
+					<tr th:if="${vinhos.empty}">
+						<td colspan="5">Nenhum vinho cadastrado</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		
+	- Agora dentro do pacote src/main/resources - static/ criar uma pasta chamada stylesheets e dentro dela criar um novo file
+		chamado "vinhos.css". Essas classes são usadas no table acima.
+		
+		.av-table-vinhos-col-codigo, .av-table-vinhos-col-icons {
+			width: 60px;
+			text-align: center;
+		}
+		
+		.av-table-vinhos-col-tipo {
+			width: 100px;
+		}
+		
+		.av-table-vinhos-col-valor {
+			width: 150px;
+			text-align: right;
+		}
+		
+	- Acrescentar no html o link do css.
+		
+		<link rel="stylesheet" type="text/css" href="@{/stylesheets/vinhos.css}"/>
+		
+	- Existe um porém, ao rodar o projeto ele está vindo como R$4.90, mas no formato de moeda brasileiro usamos 4,90, então
+		o thymeleaf reconhece um padrão e transforma em formato portugues. É só acrescentar {{vinho.valor}} como no código abaixo.
+		
+		<td th:text="|R$${{vinho.valor}}|" class="text-right">55,00</td>
+		
+	- Testar a aplicação: Cadastrar alguns vinhos e depois fazer a pesquisa para ver se está pesquisando corretamente.
+	
+- Melhorando o layout para arrumar as duplicações de código e também deixar mais bonito nosso código.
+
+	- Sera usado o layout-dialect.
+	- Então dessa forma é deixado um layout que será chamado na página que formos criando, assim será utilizado somente uma vez nosso código.
+	- Veja no pom.xml que já acrescentamos o <thymeleaf-layout-dialect>2.12 que será utilizado junto com a versão 3.0.3 do thymeleaf.
+		
+		<!-- SEMPRE QUE ATUALIZAR O THYMELEAF.VERSION TEM QUE ATUALIZAR O THYMELEAF DIALECT -->
+		<thymeleaf.version>3.0.3.RELEASE</thymeleaf.version>
+		<thymeleaf-layout-dialect.version>2.1.2</thymeleaf-layout-dialect.version>
+		
+	- Agora vamos criar nosso layout padrão:
+		- Dentro da pasta templates criar uma pasta chamada <layout>.
+		- Copiar a página de cadastro-vinho para dentro dessa pasta layout e renomear o arquivo para "layou-padrao".
+		- Será utilizado algumas partes da pagina cadastro para fazer o layout padrão e o restante vamos apagando.
+		- Para usar o layout é necessário acrescentar um novo namespace "xmlns:layout".
+			xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+			
+		- Dentro dessa página será deixado tudo que será de comum para as outras páginas que serão utilizadas no sistema.
+			- Então continuará o cabeçalho e o menu.
+			- Apagar tudo que estiver entre <section class="aw-layout-content  js-content" layout:fragment="conteudo"> apagar o que tem aqui </section>
+				- Para poder usar/estender essa página padrão é que acrescentamos o layout:padrao e também o layout:fragment="conteudo", pois o código novo
+					vai ficar dentro do <section>fica aqui o codigo da pagina</section>
+					
+		- Para utilizar esse layout padrão dentro da página de cadastro-vinho, por exemplo, é necessário acrescentar o namespace xmlns:layout também e agora uma
+			novidade, o layout:decorated.
+				
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				layout:decorate="~{layout/layout-padrao}" // aqui diz que a página de cadastro-vinho será decorada com o layout-padrao
+			
+			- Apagamos o que está no layout padrao e quando começar o <section> da página de cadastro acrescentamos <section layout:fragment="conteudo">
+			- Fazer o teste na pagina de cadastro de vinhos.
+			
+		- Agora podemos melhorar também a pagina de pesquisa, lembrando que no <head> tem um link para o css que pode ser deixado na página.
+		
+		- Ir no vinhos.css e renomar para pesquisa-vinhos.css. e lembrar de alterar também em pesquisa-vinhos.html
+		
+			- Excluir da pagina de pesquisa todo o código duplicado, assim como na pagina de cadastro e testar no browser.
+			
+		
+				
+		
