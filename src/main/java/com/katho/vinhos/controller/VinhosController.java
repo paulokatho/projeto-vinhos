@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -17,6 +18,7 @@ import com.katho.vinhos.model.TipoVinho;
 import com.katho.vinhos.model.Vinho;
 import com.katho.vinhos.repository.Vinhos;
 import com.katho.vinhos.repository.filter.VinhoFilter;
+
 
 @Controller
 @RequestMapping("/vinhos")
@@ -28,6 +30,7 @@ public class VinhosController {
 	@GetMapping("/novo")
 	public ModelAndView novo(Vinho vinho) {
 		ModelAndView mv = new ModelAndView("vinho/cadastro-vinho");
+		mv.addObject(vinho);
 		mv.addObject("tipos", TipoVinho.values());
 		return mv;
 	}
@@ -52,6 +55,14 @@ public class VinhosController {
 		return mv;
 	}
 	
+	/***
+	 * Método que retorna um vinho para que seja enviado para pagina de cadastro de vinho e assim seja editado um vinho
+	 */
+	@GetMapping("/{codigo}")
+	public ModelAndView editar(@PathVariable Long codigo) {
+		Vinho vinho = vinhos.findOne(codigo);		
+		return novo(vinho);
+	}
 	
 	
 	/**** DA MANEIRA QUE ESTÁ ABAIXO QUANDO O OBJETO VINHO É VALIDADO ELE NÃO MANTEM AS INFORMAÇÕES PREENCHIDAS NOS CAMPOS

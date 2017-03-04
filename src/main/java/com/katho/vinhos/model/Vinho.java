@@ -1,5 +1,7 @@
 package com.katho.vinhos.model;
 
+
+
 import java.math.BigDecimal;
 
 import javax.persistence.Entity;
@@ -15,12 +17,12 @@ import org.springframework.format.annotation.NumberFormat;
 
 @Entity
 public class Vinho {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long codigo;
 	
-	@NotBlank // não aceita nenhum espaço em branco
+	@NotBlank
 	private String nome;
 	
 	@NotNull
@@ -30,28 +32,35 @@ public class Vinho {
 	@NotNull
 	@NumberFormat(pattern = "#,##0.00")
 	private BigDecimal valor;
-	
+
 	public Long getCodigo() {
 		return codigo;
 	}
+
 	public void setCodigo(Long codigo) {
 		this.codigo = codigo;
 	}
+
 	public String getNome() {
 		return nome;
 	}
+
 	public void setNome(String nome) {
 		this.nome = nome;
 	}
+
 	public TipoVinho getTipo() {
 		return tipo;
 	}
+
 	public void setTipo(TipoVinho tipo) {
 		this.tipo = tipo;
 	}
+
 	public BigDecimal getValor() {
 		return valor;
 	}
+
 	public void setValor(BigDecimal valor) {
 		this.valor = valor;
 	}
@@ -63,6 +72,7 @@ public class Vinho {
 		result = prime * result + ((codigo == null) ? 0 : codigo.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

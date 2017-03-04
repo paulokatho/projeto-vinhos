@@ -245,6 +245,55 @@ Veremos:
 		
 			- Excluir da pagina de pesquisa todo o código duplicado, assim como na pagina de cadastro e testar no browser.
 			
+- Vamos implemantar agora a EDIÇÃO.
+
+	- A idéia é a seguinte, vamos utilizar a url que foi criada no table para acessar a edição do registro. Quando clicarmos no nome de algum vinho esse link
+		passa o código do vinho na url que faz a pesquisa daquele vinho e retorna o registro completo para podermos editar.
+		A url passa a ficar assim: localhost:8080/vinhos/2, por exemplo, onde esse 2 é o código do vinho.
+	- Para criar essa url com thymeleaf é bem tranquilo, vá ate a página pesquisa-vinhos onde a table <tbody> é preenchida e onde está o href que forma o 
+		link vamos acrescentar o th:href para usar o thymeleaf. O "@" é para resolver o contexto da aplicação, quando tiver.
+		O {codigo} é um parâmetro variavel e precisa estar entre chaves {}. Agora para definir o valor desse parametro variavel uso (codigo = ${vinho.codigo}),
+			essa variavel "vinho." vem do th:each, então a url {codigo} que será criada vai ser preenchida com o código que vai vir de (codigo = ${vinho.codigo}).
+			Veja abaixo como ficou.
+				
+				th:href="@{/vinhos/{codigo}(codigo=${vinho.codigo})}"
+				
+		O trecho ficou assim:
+			
+			<tr th:each="vinho : ${vinhos}">
+					<td th:text="${vinho.codigo}" class="text-center">1</td>
+					<td>
+						<a th:href="@{/vinhos/{codigo}(codigo=${vinho.codigo})}" th:text="${vinho.nome}" sec:authorize="hasRole('ROLE_CADASTRAR_VINHO')"></a>
+						<span th:text="${vinho.nome}" sec:authorize="not hasRole('ROLE_CADASTRAR_VINHO')"></span>
+					</td>
+				
+			- Testando, na tela é só ir na pesquisa e passar o mouse sobre o link e então observe que no canto inferior esquerdo vai aparecer a url com 
+				o código da url que está aparecendo.
+				
+	- Se clicar não vai aparecer nada, pois não tem nada implementado ainda e para isso vamos no controller, pois ainda não temos nenhuma url mapeada 
+		que recebe "vinhos/2", ou seja, uma url que recebe vinhos com um código.
+	- Para implementar usamos o model and view editar() que tem anotação @GetMapping que recebe uma variavel para compor a url.
+	
+		@GetMapping("/{codigo}")
+		public ModelAndView editar() { }
 		
+		Definimos para o mapeamento Get uma variavel para ser acrescentada após a parte "/vinhos". O que está entre {} é a variavel que está vindo do 
+			field que th:href que mapeamos no html.
+	
+	- Agora para o método editar saber que o código que vem do get será usado para fazer a pesquisa do vinho e trazer o vinho referente ao código passado,
+		fazemos o seguinte.
+		
+			@GetMapping("/{codigo}")
+			public ModelAndView editar(@PathVariable Long codigo) { 
+				Vinho vinho = vinhos.findOne(codigo);
+				return novo(vinho);
+				
+			- @PathVariable: Informa que o parametro Long codigo vai receber o valor que vier do @GetMapping {codigo}
+			- Para pesquisar o vinho e trazer somente um registro que será o que iremos utilizar para editar usamos ".findOne()" que traz somente um 
+				vinho específico.
+			- return(novo) funciona para trazer a página de cadastro de vinho com os dados preenchidos com o que veio da pesquisa .findOne(). Então 
+				a pagina será preechida com as informações do vinho para que possam ser editadas. Já estamos passando um vinho preechido.
+					
+	
 				
 		
