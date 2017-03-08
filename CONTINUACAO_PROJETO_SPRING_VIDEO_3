@@ -293,7 +293,240 @@ Veremos:
 				vinho específico.
 			- return(novo) funciona para trazer a página de cadastro de vinho com os dados preenchidos com o que veio da pesquisa .findOne(). Então 
 				a pagina será preechida com as informações do vinho para que possam ser editadas. Já estamos passando um vinho preechido.
-					
 	
-				
+	- Testar a página e verificar se está trazendo os vinhos cadastrados.
+	- Se caso não funcionar é porque o controller no @GetMapping que recebe a requisição para exibir a url está sem o mv.addObject(vinho); então é 
+		só acrescentar no método.
 		
+		@GetMapping("/novo")
+		public ModelAndView novo(Vinho vinho) {
+			ModelAndView mv = new ModelAndView("vinho/cadastro-vinho");
+			mv.addObject(vinho); // *** se não rodar poder ser essa linha aqui
+			mv.addObject("tipos", TipoVinho.values());
+			return mv;
+		} 
+	
+
+- Porém depois de entrar em modo de edição clicando no link e editando o vinho, se clicar em salvar vai dar erro, pois está recebendo um @GetMapping("/{codigo}")
+	e para salvar tem que ser o método @Post. Então vamos ajeitar isso aí.
+	
+	- Abra o cadastro-vinho e ir até o form method="POST" e acrescentar o th:action para que ao clicar ele passe a url informada no action para o metodo @Post
+		do controller.
+		
+			<form method="POST" class="form-vertical  js-form-loading" 
+				th:object="${vinho}" th:action="@{/vinhos/novo}">
+	
+	- Mas ainda falta um detalhe, se subter o formulario dessa forma ainda não vai editar, ele vai acrescentar um novo registro, pois não informamos
+		em nenhum momento o código do vinho para que o spring saiba que é uma edição.
+		- Então vamos até o cadastro-vinho acima do <div class> que contém o input do nome e acrescentamos um input type hidden e acredite, só isso
+			resolve...
+			
+			<input type="hidden" th:field="*{codigo}"/> //esse campo hidden aqui
+			
+			<div class="form-group">
+				<label for="nome">Nome</label>
+				<input id="nome" type="text" class="form-control" th:field="*{nome}"/>
+			</div>
+						
+
+- Vamos partir agora para a exclusão do registro. Ao clicar na lixeirinha do grip efetuar a exclusâo.
+
+	- Para implementar vamos até getbootstrap.com/javascript/#modals e procure pelos botões de de teste e veja que tem 3 tipos, Large, small e launch demo modal.
+		- Vamos usar o small. Esse modal (caixa de popup) é para perguntar se o usuário tem certeza que quer excluir o vinho.
+		- Antes de fechar o </section> acrescentar o trecho de código para implementar o modal. Veja como ficou:
+		
+			<div class="modal  fade" id="confirmaExclusaoModal" tabindex="-1" role="dialog">
+				<div class="modal-dialog" role="document">
+			  		<div class="modal-content">
+			  			<form th:action="@{/vinhos}" method="POST">
+			  				<input type="hidden" name="_method" value="DELETE"/>
+			     			<div class="modal-header">
+				       			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				       				<span aria-hidden="true">&times;</span>
+				       			</button>
+				       			<h4 class="modal-title" id="myModalLabel">Excluir vinho</h4>
+			     			</div>
+			     			<div class="modal-body">
+			       				<span>Tem certeza?</span>
+			     			</div>
+			     			<div class="modal-footer">
+			       				<button type="button" class="btn  btn-default" data-dismiss="modal">Cancelar</button>
+			       				<button type="submit" class="btn  btn-primary">Excluir</button>
+			     			</div>
+			     		</form>
+			  		</div>
+				</div>
+			</div>					
+			
+	- A única diferença para o que está no site do bootstrap é que foi colocado um <form th:action="@{/vinhos}" method="POST">
+		 para que possamos apagar um vinho.
+	- Para fazer aparecer o modal tem a documentação lá no site do bootstrap, mas é basicamente acrescentar no icone do lixinho e acrescentar
+		essas duas classes: data-toggle="modal" data-target="#confirmaExclusaoModal". Lembrando que o data-target é o id do nosso modal.
+		
+		<i class="fa  fa-trash" style="cursor:pointer" data-toggle="modal" data-target="#confirmaExclusaoModal"
+							data:nome="${vinho.nome}" data:url-apagar="@{/vinhos/{codigo}(codigo=${vinho.codigo})}">
+		</i>
+	
+	- Vendo a documentação do bootstrap também é possível observar que podemos utilizar o javascript para exibir conteúdos diferentes
+		dentro dos modais, de acordo com o código do vinho, por exemplo.
+		
+	- Importante: não podemos deixar esse js dentro e nem fora do <section> do pesquisa-vinhos, pois se não ele não carrega esse js.
+		Também não dá para colocar dentro do layout padrão abaixo dos outros javascript, pois se não dá erro. Então a maneira correta
+			é utilizando th:block do thymeleaf que já vem para resolver esses conflitos de forma desacoplada.
+		- Criamos um block dentro do layout padrão e depois chamamos ele nas páginas, nesse caso pesquisa-vinhos. No pesquisa-vinhos
+			chamamos o block e passamos o js extra que queremos exibir. 
+				Colocamos no layout padrao colocamos antes de fechar o </body>.
+				
+					<th:block layout:fragment="javascript-extra"></th:block>
+					
+				No pesquisa-vinhos antes de fechar o </body> também.
+				
+					<th:block layout:fragment="javascript-extra">
+						<script th:src="@{/javascripts/excluir-vinho-modal.js}"></script>
+					</th:block>
+	
+	- Esse js pode ser direto na pagina ou dessa maneira acima colocando uma pasta e criando um arquivo e depois somente chamar ele.
+	
+	- A idéia agora para funcionar esse js é que esse js pegue o nome do vinho que está vindo dentro o icone <i>. Para isso vamos
+		criar alguns elementos a mais no <i> da lixeira para capturar essas informações.
+		Exemplo: acrescentar um data-nome="..." e para nos auxiliar nisso vamos usar um carinha do thymeleaf.
+		
+		- Para utilizar esse recurso do thymeleaf temos que acrescentar a dependencia dele no pom.xml é o artifactId 
+			thymeleaf-extras-data-attribute.
+			
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-security</artifactId>
+				</dependency>
+			
+			Também tem que ir nas propriedades do pom.xml para acrescentar a versão do thymeleaf data attribute.
+			
+				<thymeleaf-extras-data-attribute.version>2.0.1</thymeleaf-extras-data-attribute.version>	
+	
+		- Acrescentar na pagina de pesquisa outro namespace para usar o data attribute.
+		
+			xmlns:data="http://www.thymeleaf.org/extras/data-attribute"
+			
+		- Só acrescentar no <i> o data:nome="${vinho.nome}"  e assim no js é possível pegar esse valor com var nome = botao.data('nome');
+			Agora temos o nome do vinho.
+		
+			- Assim é possível pegar esse nome que capturamos e inserir ele dentor do <span> que apresenta o Tem certeza?
+				Nessa div: 
+				
+					<div class="modal-body">
+						<span>Tem certeza?</span>
+	     			</div>
+		
+		- Proximo passo vamos pegar o modal (var modal = $(this);)
+			Agora esse var modal se torna um objeto jquery.
+		
+		- Ficou assim o js/jquery: Mas essa ainda não é a versão final de como ficará esse js/jquery
+		
+			<th:block layout:fragment="javascript-extra">
+				<script>
+					$('#confirmaExcluisaoModal').on('show.bs.modal', function (event) {
+						var botao = $(event.relatedTarget);
+						var nome = botao.data('nome'); //pegamos nosso data:nome do thymeleaf aqui
+						
+						var  modal = $(this); //capturando o modal
+						
+						//Aqui procurando dentro de modal do modal-body a classe span e acrescentando o .html com a string e o nome do vinho
+						modal.find('.modal-body span').html('Tem certeza que deseja excluir <strong>' + nome + '</strong>?');
+					});
+				</script>
+			</th:block>
+		
+		- Agora só reiniciar o servidor e testar o link para ver se está apresentando o modal com o nome correto do vinho.
+		
+ 	- Esta na hora de fazer a exclusão propriamente dita.
+ 	- Ir até controller e acrescentar um método para fazer esse delete. Ele vai receber o método delete do http.
+ 	
+ 		@DeleteMapping("/{codigo}")
+		public String apagar(@PathVariable Long codigo, RedirectAttributes attributes) {
+			vinhos.delete(codigo);
+			attributes.addFlashAttribute("mensagem", "Vinho removido com sucesso.");
+			return "redirect:/vinhos";
+		}
+
+	- Colocar na tela de pesquisa a mensagem de sucesso ao apagar. Mas lembrando que por enquanto o código ficara duplicado, porém será feito de
+		maneira melhor logo menos.
+		- Na pesquisa colocar a <div alert-success>, assim como na página de cadastro.
+			
+			<div class="alert  alert-success" th:if="${!#strings.isEmpty(mensagem)}">
+				<span th:text="${mensagem}"></span>
+			</div>
+			
+	- Voltar na pesquisa e agora temos que fazer o spring entender que estamos passando o método http "DELETE" e para isso o spring nos fornece um
+		recurso bacana, <input type="hidden" name="_method" value="DELETE"/>
+		Esse recurso é colocado dentro do nosso formulário em baixo do <form> que tem o método "POST". Dessa maneira o spring entende que está sendo 
+			enviado um método "DELETE" e ele já cai no método @DeleteMapping no nosso controller.
+							
+	- Após isso é necessário saber o código do vinho que será enviado para o metodo delete e para isso vamos utilizar o js/jquery novamente e utilizar
+		o data-attribute do thymeleaf novamente dentro do botão lixo <i>. 
+		 	
+		 	data:url-apagar="@{/vinhos/{codigo}(codigo=${vinho.codigo})}"></i>
+		 	
+	- Ir no js da pesquisa acrescentar a url
+	
+		var url = botao.data('url-apagar'); //pegando o valor do data:url-apagar
+		
+	- Ficou assim: 
+	
+		<th:block layout:fragment="javascript-extra">
+			<script>
+				$('#confirmaExcluisaoModal').on('show.bs.modal', function (event) {
+					var botao = $(event.relatedTarget);
+					var nome = botao.data('nome'); //pegamos nosso data:nome do thymeleaf aqui
+					var url = botao.data('url-apagar');
+					
+					var  modal = $(this); //capturando o modal
+					var form = modal.find('form'); //buscar dentro do form o nome 'form'
+					form.attr('action', url); // attr é um atributo do bootstrap
+					//Aqui procurando dentro de modal do modal-body a classe span e acrescentando o .html com a string e o nome do vinho
+					modal.find('.modal-body span').html('Tem certeza que deseja excluir <strong>' + nome + '</strong>?');
+				});
+			</script>
+		</th:block>
+		
+	- Lembrando que colocamos tudo isso dentro de um formulario, pois cada vinho terá uma url diferente com seu código exibido na url para completar a url
+		e saber qual vinho está sendo selecionado no link do grip para deletar, assim como para salvar.
+		
+		- Então agora temos o crud completo da nossa aplicação.
+		
+- Mas ainda falta terminar nosso projeto com a SEGURANÇA.
+
+	- Acrescentar duas dependencias no pom.xml para utilizar o spring security, uma é o proprio spring security e a outra é uma exentensão do thymeleaf para
+		ser utilizado com o spring security. E também acrescentar o a versão do thymeleaf extras spring security nas propriedades do pom.xml.
+		
+	- Apos adicionar essa dependencia e rodar novamente o servidor de aplicação o projeto já está com segurança. Ao rodar novamente o projeto no browser ele já 
+		pede o usuario e senha. Basta informar usuario: user e senha: "a senha que ele passar no console da aplicação do eclipse".
+	- A senha é muito grande e complexa e precisamos mudar ela. Para isso vamos criar uma nova classe em com.katho.vinhos.config, por exemplo. O nome da clsse 
+		será SecurityConfig. 
+	- Acrescentar na classe a assinatura @EnableWebSecurity e extender a classe WebSecurityConfigurerAdapter, dessa forma já teremos vários metodos para nos
+		auxiliar, como acrescentar usuarios, senhas e grupos de usuarios que pode ser por banco de dados ou por memoria mesmo, que será nosso caso para
+		agilizar o desenvolvimento.
+		
+		@EnableWebSecurity
+		public class SecurityConfig extends WebSecurityConfigurerAdapter{
+		
+			@Override
+			protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+				auth.inMemoryAuthentication()
+				.withUser("joao").password("joao").roles("PESQUISAR_VINHO").and()
+				.withUser("maria").password("maria").roles("CADASTRAR_VINHO", "PESQUISAR_VINHO");
+				
+				//tudo o que eu quiser ignorar para não pedir user e senha coloc aqui
+			@Override
+			public void configure(WebSecurity web) throws Exception {
+				web.ignoring()
+					.antMatchers("/layout/**");
+			}			
+		}
+		
+		- Então como ainda não tenho a tela de login vamos deixar algo para precisar ficar colocando login a todo momento. Por isso
+			o ignoring()
+			
+			1:22:15
+	- 
+		
+	

@@ -26,6 +26,8 @@
 		<!-- SEMPRE QUE ATUALIZAR O THYMELEAF.VERSION TEM QUE ATUALIZAR O THYMELEAF DIALECT -->
 		<thymeleaf.version>3.0.3.RELEASE</thymeleaf.version>
 		<thymeleaf-layout-dialect.version>2.1.2</thymeleaf-layout-dialect.version>
+		<thymeleaf-extras-data-attribute.version>2.0.1</thymeleaf-extras-data-attribute.version>
+		<thymeleaf-extras-springsecurity4.version>3.0.1.RELEASE</thymeleaf-extras-springsecurity4.version>
 	</properties>
 
 	<dependencies>
@@ -59,6 +61,25 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- Recurso do thymeleaf para criar classes data nos elementos do formulario para pegar no js -->
+		<dependency>
+			<groupId>com.github.mxab.thymeleaf.extras</groupId>
+    		<artifactId>thymeleaf-extras-data-attribute</artifactId>
+		</dependency>		
+		
+		<!-- Dependencia para utilizar o spring security -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		
+		<!-- Extensão do thymeleaf para utilizar o spring security -->
+		<dependency>
+			<groupId>org.thymeleaf.extras</groupId>
+  			<artifactId>thymeleaf-extras-springsecurity4</artifactId>
+  		</dependency>
+		
 	</dependencies>
 
 	<build>

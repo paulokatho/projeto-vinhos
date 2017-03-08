@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,6 +65,12 @@ public class VinhosController {
 		return novo(vinho);
 	}
 	
+	@DeleteMapping("/{codigo}")
+	public String apagar(@PathVariable Long codigo, RedirectAttributes attributes) {
+		vinhos.delete(codigo);
+		attributes.addFlashAttribute("mensagem", "Vinho removido com sucesso.");
+		return "redirect:/vinhos";
+	}
 	
 	/**** DA MANEIRA QUE ESTÁ ABAIXO QUANDO O OBJETO VINHO É VALIDADO ELE NÃO MANTEM AS INFORMAÇÕES PREENCHIDAS NOS CAMPOS
 	 * SENDO QUE NA FORMA APRENSATADA ACIMA COM ModelAndView É POSSIVEL FAZER A VALIDAÇÃO E RETORNAR PARA O BROWSER AS
