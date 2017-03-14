@@ -514,8 +514,9 @@ Veremos:
 				auth.inMemoryAuthentication()
 				.withUser("joao").password("joao").roles("PESQUISAR_VINHO").and()
 				.withUser("maria").password("maria").roles("CADASTRAR_VINHO", "PESQUISAR_VINHO");
+			}
 				
-				//tudo o que eu quiser ignorar para não pedir user e senha coloc aqui
+		//tudo o que eu quiser ignorar para não pedir user e senha coloc aqui
 			@Override
 			public void configure(WebSecurity web) throws Exception {
 				web.ignoring()
@@ -523,10 +524,158 @@ Veremos:
 			}			
 		}
 		
+		- Dentro da pasta de layout que ganhamos da algaworks e dentro da pasta dist tem um "login.html". Para usarmos como modelo.		
 		- Então como ainda não tenho a tela de login vamos deixar algo para precisar ficar colocando login a todo momento. Por isso
-			o ignoring()
-			
-			1:22:15
-	- 
+			o ignoring().
+		- Da mesma forma que no método configure() acima foi concatenando com "and do AuthenticationManagerBuilder" é possível fazer isso no método abaixo
+			configure(WebSecurity web) e assim ir concatenando as excessões.
 		
+- Agora ir até a pasta template e acrescentar um novo file chamado "login.html".
+- Mas agora para usar o nosso layout vamos usar o layout:decorate e layout-simples. Nesse layout-simples não vai ter o menu lateral nem o botão de logout, será 
+	o layout bem mais simples mesmo.
 	
+	- Na pasta layout criar um novo file do tipo html para montar esse layout simples. 
+	- Nos 2 arquivos html criados inserir o código fonte.
+	
+	- longin:
+		<!DOCTYPE html>
+		<html xmlns="http://www.w3.org/1999/xhtml"
+			xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+			xmlns:th="http://www.thymeleaf.org"
+			layout:decorate="~{layout/layout-simples}"> <!--Decorando com layout-simples-->
+		
+		<th:block layout:fragment="conteudo">
+			<form th:action="@{/login}" method="POST">
+				<div class="aw-simple-panel">
+					<img alt="AlgaWorks" th:src="@{/layout/images/logo-gray.png}"/>
+					
+					<div class="aw-simple-panel__message">
+						Por favor, faça o login.
+					</div>
+					
+					<div class="aw-simple-panel__message  is-error" th:if="${#bools.isTrue(param.error)}">
+						O usuário e/ou senha não conferem
+					</div>
+					
+					<div class="aw-simple-panel__box">
+						<div class="form-group  has-feedback">
+							<input type="text" class="form-control  input-lg" placeholder="Seu usuário" 
+								autofocus="autofocus" name="username"/>
+							<span class="glyphicon  glyphicon-envelope  form-control-feedback"></span>
+						</div>
+						
+						<div class="form-group  has-feedback">
+							<input type="password" class="form-control  input-lg" placeholder="Sua senha" name="password"/>
+							<span class="glyphicon  glyphicon-lock  form-control-feedback" ></span>
+						</div>
+						<div class="form-group">
+							<button type="submit" class="btn  btn-primary  btn-lg  aw-btn-full-width">Entrar</button>
+						</div>
+					</div>
+					
+				</div>
+			</form>
+		</th:block>
+		</html>
+ 
+ 	- form th:action="@{/login}" vai submeter o forumalario para "url/login". Também configure o usuario name="username" e a senha name="password".
+ 	
+ 	- Então na hora de submeter o formulario com o método POST o spring está esperando um username e um password.
+ 	
+ 	- Codificação do layout simples.
+ 	
+	 	<!DOCTYPE html>
+		<html lang="pt"
+			xmlns="http://www.w3.org/1999/xhtml"
+			xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+			xmlns:th="http://www.thymeleaf.org">
+		<head>
+		  <meta charset="UTF-8"/>
+		  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+		
+		  <title>Spring e Layout Atacama</title>
+		
+		  <link rel="stylesheet" type="text/css" th:href="@{/layout/stylesheets/vendors.min.css}"/>
+		  <link rel="stylesheet" type="text/css" th:href="@{/layout/stylesheets/algaworks.min.css}"/>
+		  
+		  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+		  <!--[if lt IE 9]>
+		    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		  <![endif]-->
+		</head>
+		
+		<body class="aw-layout-simple-page">
+		
+			<div class="aw-layout-simple-page__container">
+				<th:block layout:fragment="conteudo"/>
+			</div>
+			
+			<script th:src="@{/layout/javascripts/vendors.min.js}"></script>
+			<script th:src="@{/layout/javascripts/algaworks.min.js}"></script>
+		
+		</body>
+		</html>
+		
+	- Já está quase pronto o layout.
+	- No caso o spring tem que saber que a url está sendo encaminhada e para isso é necessário criar um novo método em SecurityConfig e configurar certinho.
+		O configure(HttpSecurity http) e esse é o método que mais trabalha quando se está trabalhando com o spring security, pois aqui configura quem 
+			pode ver uma determinada url, o mapeamento da url e etc.
+	- Voltar no SecurityConfig para inserir o novo método de controle de acessos http.
+	
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			http
+				.authorizeRequests() //autoriza requisições, autorizando as requisições
+					.antMatchers("/vinhos").hasRole("PESQUISAR_VINHO") //que se encontram em /vinhos e hasRole "tenham a regra" PESQUISAR_VINHO"
+					.antMatchers("/vinhos/**").hasRole("CADASTRAR_VINHO") // ant é o método padrão para identificação
+					.anyRequest().authenticated() // qualquer requisição autenticada
+					.and()
+				.formLogin() // ao formulário de login quem pode ter acesso?
+					.loginPage("/login") // a pagina de login na url /login
+					.permitAll() //todos tem acesso a pagina de login, ou seja, página pública
+					.and()
+				.logout() // para logout
+					.logoutRequestMatcher(new AntPathRequestMatcher("/logout")); //assim fica facil fazer logout, só acrescentar o link no layout padrão na "portinha sair"
+		}		
+	 
+	 - Precisamos criar agora o controller para conseguirmos chegar na nossa página de login "/login" do .loginPage("/login")
+	 - Ir até o pacote controller e criar uma class SegurancaController.
+	
+	- Prestar bastante atenção nos pacotes do import para ver se estão vindo do lugar certo.
+	
+		import org.springframework.security.core.annotation.AuthenticationPrincipal;
+		import org.springframework.security.core.userdetails.User;
+		import org.springframework.stereotype.Controller;
+		import org.springframework.web.bind.annotation.RequestMapping;
+		
+		@Controller
+		public class SegurancaController {
+			
+			/* @AuthenticationPrincipal entrega a sessão para o spring, é possivel pegar a sessão, o nome do usuario e etc.
+				essa anotação também é possível utilizar em qualquer controlador. 
+				Também é possivel estender essa classe User e criar seu próprio User para obter mais informações, por exemplo
+				outras informações do usuário que você deseje.
+			*/
+			
+			@RequestMapping("/login")
+			public String login(@AuthenticationPrincipal User user) {
+				if (user != null) {
+					return "redirect:/vinhos";
+				}
+				return "login";
+			}
+		
+		}
+				 
+	 	@AuthenticationPrincipal entrega a sessão para o spring, é possivel pegar a sessão, o nome do usuario e etc.
+		essa anotação também é possível utilizar em qualquer controlador. 
+		Também é possivel estender essa classe User e criar seu próprio User para obter mais informações, por exemplo
+		outras informações do usuário que você deseje.
+	
+			
+	 1:33:29
+	 
+	 
