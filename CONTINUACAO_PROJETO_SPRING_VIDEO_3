@@ -748,6 +748,74 @@ Veremos:
 		é muito lógico deixar aparecendo o cesto de lixo quando ele listar os vinhos. Então vamos deixar invisivel esse cesto para o 
 		joao e liberar esse acesso somente para maria.
 		
-		1:40:15
+	- Então vamos abrir a pesquisa e vamos acrescentar o namespace <sec:....>
+		
+		xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+		
+	- Agora dentro da <tbody> em <td class= fa fa-trash...> vamos acrescentar a tag "sec:authorize="hasRole('ROLE_CADASTRAR_VINHO')". 
+		Essa tag é onde fica o botão do lixinho para excluir o regristro.
+		
+		<td class="text-center" sec:authorize="hasRole('ROLE_CADASTRAR_VINHO')">
+			<i class="fa  fa-trash" style="cursor:pointer"
+				data-toggle="modal" data-target="#confirmaExclusaoModal"
+				data:nome="${vinho.nome}" 
+				data:url-apagar="@{/vinhos/{codigo}(codigo=${vinho.codigo})}">
+			</i>
+		</td>
+	
+	- No caso também tem que ocultar a coluna descrição "valor" e o valor do vinho, exemplo, "4,99". Então também tem que colocar, ou seja a coluna valor toda
+		fica oculta.
+		Porém também temos que pensar que o usuário joao que não tem permissão de cadastrar não pode ter acesso ao link para edição, entã vamos colocar essa
+			regra no html para que somente quem tem acesso "ROLE_CADASTRAR_VINHO" possa editar. E se fizermos da maneira apresentada acima, somente uma vez
+			irá aparecer, pois acrescentamos a regra "not hasRole"
+	- Na coluna nome temos que editar para ficar da seguinte maneira, porém existem outras formas de fazer a mesma coisa. Essa é somente uma delas.
+	
+		<td>
+			<a th:href="@{/vinhos/{codigo}(codigo=${vinho.codigo})}" th:text="${vinho.nome}" sec:authorize="hasRole('ROLE_CADASTRAR_VINHO')"></a>
+			<span th:text="${vinho.nome}" sec:authorize="not hasRole('ROLE_CADASTRAR_VINHO')"></span>
+		</td>
+		
+		- Observe que o link th:ref para edição de vinho aparece somente para hasRole ROLE_CADASTRAR_VINHO e o <span> abaixo é para usuarios que
+			não tem permissão de edição. Exite a negação de exibir o nome para quem não tem permissão de edição, assim exibe somente o nome do 
+			vinho sem o link para edição, somente acrescentando "not".
+			
+				<span th:text="${vinho.nome}" sec:authorize="not hasRole('ROLE_CADASTRAR_VINHO')"></span>
+			
+	- No caso agora vamos retirar a parte do js que acrescentamos para fazer a exclusão da página, que está na parte inferior da página.
+		- Copiar o conteúdo do código e apagar. Especificamente o trecho abaixo.
+		
+			<script>
+				$('#confirmaExcluisaoModal').on('show.bs.modal', function (event) {
+					var botao = $(event.relatedTarget);
+					var nome = botao.data('nome'); //pegamos nosso data:nome do thymeleaf aqui
+					var url = botao.data('url-apagar');
+					
+					var  modal = $(this); //capturando o modal
+					var form = modal.find('form'); //buscar dentro do form o nome 'form'
+					form.attr('action', url); // attr é um atributo do bootstrap
+					//Aqui procurando dentro de modal do modal-body a classe span e acrescentando o .html com a string e o nome do vinho
+					modal.find('.modal-body span').html('Tem certeza que deseja excluir <strong>' + nome + '</strong>?');
+				});
+			</script>
+			
+		- Colocar o js em um arquivo separado, então ir na pasta static/javascript e acrescentar um novo arquivo do tipo FILE, chamado 
+			"excluir-vinho-modal.js" e colar o trecho de código acima.
+		
+			- Não podemos esquecer de incluir a chamada para o js na pagina de pesquisa dentro do th:block, pois ainda precisa obedecer as
+				regras de carregamento do jquery, como falado mais acima quando foi feito a parte de exclusão.
+				
+				<th:block layout:fragment="javascript-extra">
+					<script th:src="@{/javascripts/excluir-vinho-modal.js}"></script>
+				</th:block>
+		
+		- Exercício: Tem o js do layout-padrao também que podemos colocar em um arquivo dentro da pasta static/javascript, segue a mesma
+						idéia desse processo feito acima. Fazer para praticar!
+						
+
+- FAZENDO O DEPLOY DA APLICAÇÃO NO HERUKO
+
+	
+	
+	
 	        
 		   
