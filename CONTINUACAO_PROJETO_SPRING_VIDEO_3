@@ -676,6 +676,78 @@ Veremos:
 		outras informações do usuário que você deseje.
 	
 			
-	 1:33:29
-	 
-	 
+- Se acessarmos a página e o login não for permitido o servidor vai retornar erro 403 e vai quebrar a página, então vamos arrumar e deixar
+	um pouco mais bonitinho.
+	
+	- Ir em templates e criar um pasta chamada error e crie um novo arquivo chamado 403.html. 
+		Copiar o cabeçalho de outra página e vamos pegar o conteúdo da página de 404 - Acesso negado.
+	- Nesse ponto já é possível testar a página, nela tem um botão para voltar para a página principal.
+	
+	Página 403.html:
+	
+		<!DOCTYPE html>
+		<html xmlns="http://www.w3.org/1999/xhtml"
+			xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+			xmlns:th="http://www.thymeleaf.org"
+			layout:decorate="~{layout/layout-simples}">
+			
+		<th:block layout:fragment="conteudo">
+		
+			<div class="aw-error-panel">
+				<h1 class="aw-error-panel__code">
+					<i class="fa  fa-location-arrow"></i> 403
+				</h1>
+				
+				<h2 class="aw-error-panel__title">Acesso negado</h2>
+				
+				<div class="aw-error-panel__description">
+					Desculpe, você não está autorizado a acessar a página que solicitou. 
+					Se você acha que isso é um engano, entre em contato com a gente.
+					<br/><br/>
+					<a href="javascript:history.back()" class="btn  btn-primary">Voltar para a página inicial</a>
+				</div>
+			</div>
+		</th:block>			
+		</html>	
+		
+	- Agora para aparecer o botão de logout "portinha" no canto superior direito da página é só ir na página layout-padrao e e procurar
+		o trecho abaixo e descomentar. Como no exemplo abaixo.
+		
+		<ul class="nav navbar-nav  navbar-right">
+	    	<li>
+	    		<p class="navbar-text" th:text="${#authentication.name}"></p>
+	    	</li>
+	      	<li>
+	        	<a th:href="@{/logout}"><em class="fa  fa-sign-out"></em></a>
+	      	</li> 
+	    </ul>
+	   
+	- Nesse momento podemos acrescentar o nome do usuário no canto ao lado do botão de logout para saber qual usuário está logado.
+	- Para ajudar vamos acrescentar o namespace na página layout-padrao: xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	- Agora acrescentar mais um <li> e colocar um th:text para exibir o nome, vamos acrescentar antes do botão, mas ainda dentro
+		da tag <ul class= "nav navbar-nav..."
+		
+		<li>
+			<p class="navbar-text" th:text="${#authentication.name}"></p>
+		</li>
+		
+	- Dentro do nav class="aw-menu"... vamos configurar a liberação do link de acordo com o grau de acesso de usuario, exemplo, quem
+		tem acesso só para pesquisa, nesse caso joao, ele só vai ver o link de pesquisa e a outra usuaria, maria, já tem acesso ao 
+		link para cadastro de vinho.
+		- É somente necessário criar uma lista <li> contendo sec:authorize="hasHole('ROLE_CADASTRAR_VINHO"). 
+	
+		<nav class="aw-menu  js-menu">
+	      <ul class="aw-menu__list">
+	        <li class="aw-menu__item" sec:authorize="hasRole('ROLE_CADASTRAR_VINHO')">
+	          <a th:href="@{/vinhos/novo}"><i class="fa  fa-fw  fa-home"></i><span>Cadastro vinho</span></a>
+	        </li>
+	        
+	- Testar todos os acessos e efetuar cadastro e listagem de vinhos para cada usuario, testando suas permissões.
+	
+	- Pensando: Se o joao não tem acesso para o cadastro, quando ele listar e aparecer um vinho ele não pode deletar o vinho, então não 
+		é muito lógico deixar aparecendo o cesto de lixo quando ele listar os vinhos. Então vamos deixar invisivel esse cesto para o 
+		joao e liberar esse acesso somente para maria.
+		
+		1:40:15
+	        
+		   
